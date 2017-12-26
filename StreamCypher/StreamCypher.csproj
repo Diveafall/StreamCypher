@@ -53,15 +53,19 @@
     <Compile Include="Cypher\AesCryptor.cs" />
     <Compile Include="Cypher\Cryptor.cs" />
     <Compile Include="Cypher\CypherEngine.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Cypher\CypherModel.cs" />
+    <Compile Include="Main.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="Main.Designer.cs">
+      <DependentUpon>Main.cs</DependentUpon>
     </Compile>
     <Compile Include="Helper\ArrayEx.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Main.resx">
+      <DependentUpon>Main.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

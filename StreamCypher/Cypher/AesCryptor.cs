@@ -17,7 +17,10 @@ namespace StreamCypher.Cypher
 
         public async Task Encrypt(byte[] chunk, Stream destination)
         {
-            await _destinationStream.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
+            using (var cryptoStream = new CryptoStream(destination, _encryptor, CryptoStreamMode.Write))
+            {
+                await _destinationStream.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
+            }
         }
 
         private Aes _aes;
