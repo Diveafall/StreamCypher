@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using StreamCypher.Cypher;
 using System.IO;
+using StreamCypher.Helper;
 
 namespace StreamCypher
 {
@@ -16,9 +17,13 @@ namespace StreamCypher
     {
 
         const string sourcePath = @"D:\chamber\sources\1.rar";
-        const string destinationPath = @"D:\chamber\decrypted";
+        const string destinationPath = @"D:\chamber\encrypted";
+        private bool _decryptActivated = false;
 
         private CypherModel _model;
+
+        OpenFileDialog fileDialog = new OpenFileDialog();
+        FolderBrowserDialog folderDialog = new FolderBrowserDialog();
 
         public Main()
         {
@@ -28,27 +33,32 @@ namespace StreamCypher
             textBoxDestinationFolder.Text = destinationPath;
             textBoxEncryptedFilename.Text = @"1";
         }
-        
-        public void Report(int progress)
+
+        private void configureMode()
         {
-            progressBar.Value = progress;
+            if (_decryptActivated)
+            {
+                actionButton.Text = "Decrypt";
+            } else
+            {
+                actionButton.Text = "Encrypt";
+            }
         }
 
         private async void actionButton_Click(object sender, EventArgs e)
         {
+            progressBar.Value = 0;
             actionButton.Enabled = false;
-            var destinationPath = Path.Combine(textBoxDestinationFolder.Text, textBoxEncryptedFilename.Text + "." + CypherModel.ENCRYPTED_EXTENSION);
-
-            await CypherEngine.Encrypt(textBoxSourceFile.Text, destinationPath, new Progress<int>(Report));
+            
+            var stats = await _model.Encrypt(progress => { progressBar.Value = progress; });
 
             actionButton.Enabled = true;
-            progressBar.Value = 0;
+            var seconds = stats.durationMilliseconds / 1000;
+            UIEx.ShowNotice("Encryption Complete!", "Duration: " + seconds.ToString() + " seconds.");
         }
 
         private void buttonSelectSourceFile_Click(object sender, EventArgs e)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-
             fileDialog.Title = "Select Source File";
 
             DialogResult result = fileDialog.ShowDialog();
@@ -65,8 +75,6 @@ namespace StreamCypher
 
         private void buttonSelectDestinationFolder_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog folderDialog = new FolderBrowserDialog();
-
             DialogResult result = folderDialog.ShowDialog();
             switch (result)
             {
@@ -75,6 +83,27 @@ namespace StreamCypher
                     break;
                 default: break;
             }
+        }
+
+        private void textBoxSourceFile_TextChanged(object sender, EventArgs e)
+        {
+            _model.SourceFilePath = textBoxSourceFile.Text;
+        }
+
+        private void textBoxDestinationFolder_TextChanged(object sender, EventArgs e)
+        {
+            _model.EncryptedDirectory = textBoxDestinationFolder.Text;
+        }
+
+        private void textBoxEncryptedFilename_TextChanged(object sender, EventArgs e)
+        {
+            _model.EncryptedFileName = textBoxEncryptedFilename.Text;
+        }
+
+        private void radioButtonDecrypt_CheckedChanged(object sender, EventArgs e)
+        {
+            _decryptActivated = radioButtonDecrypt.Checked;
+            configureMode();
         }
     }
 }
