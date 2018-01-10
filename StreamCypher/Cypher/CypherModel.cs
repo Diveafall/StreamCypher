@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static StreamCypher.Cypher.CypherEngine;
+using Sodium;
+using StreamCypher.Helper;
 
 namespace StreamCypher.Cypher
 {
@@ -12,10 +14,13 @@ namespace StreamCypher.Cypher
     {
         #region Constants
         public const string ENCRYPTED_EXTENSION = @"enc";
+        public const int BUFFER_SIZE = 1048576;
         #endregion
 
         #region Fields
         private string _sourceFilePath;
+        private byte[] _key = SecretBox.GenerateKey();
+        private byte[] _nonce = SecretBox.GenerateNonce();
         #endregion
 
         #region Properties
@@ -46,29 +51,50 @@ namespace StreamCypher.Cypher
 
         public string EncryptedFileName { get; set; }
 
+        public byte[] Key { get { return _key; } set { _key = value; } }
+
+        public byte[] Nonce { get { return _nonce; } set { _nonce = value; } }
+
         public string EncryptedFilePath
         {
             get
             {
-                return Path.Combine(EncryptedDirectory, EncryptedFileName + "." + ENCRYPTED_EXTENSION);
+                return Path.Combine(EncryptedDirectory, EncryptedFileName);
             }
         }
         #endregion
 
-        public async Task<CypherStats> Encrypt(Action<int> reporter)
+        public async Task<Stats> Encrypt(Action<int> reporter)
         {
             try
             {
                 using (var sourceStream = File.OpenRead(_sourceFilePath))
                 using (var destinationStream = File.OpenWrite(EncryptedFilePath))
                 {
-                    return await CypherEngine.Encrypt(sourceStream, destinationStream, new Progress<int>(reporter));
+                    return await CypherEngine.Encrypt(_key, _nonce, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
                 }
             } catch(Exception exception)
             {
-
+                UIEx.ShowNotice("SHIT", exception.Message);
             }
-            return new CypherStats();
+            return new Stats();
+        }
+
+        public async Task<Stats> Decrypt(Action<int> reporter)
+        {
+            try
+            {
+                using (var sourceStream = File.OpenRead(_sourceFilePath))
+                using (var destinationStream = File.OpenWrite(EncryptedFilePath))
+                {
+                    return await CypherEngine.Decrypt(_key, _nonce, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
+                }
+            }
+            catch (Exception exception)
+            {
+                UIEx.ShowNotice("SHIT", exception.Message);
+            }
+            return new Stats();
         }
     }
 }

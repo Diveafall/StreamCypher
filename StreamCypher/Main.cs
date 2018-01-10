@@ -10,14 +10,15 @@ using System.Windows.Forms;
 using StreamCypher.Cypher;
 using System.IO;
 using StreamCypher.Helper;
+using Sodium;
 
 namespace StreamCypher
 {
     public partial class Main : Form
     {
 
-        const string sourcePath = @"D:\chamber\sources\1.rar";
-        const string destinationPath = @"D:\chamber\encrypted";
+        const string sourcePath = @"D:\chamber\encrypted\1.enc";
+        const string destinationPath = @"D:\chamber\decrypted";
         private bool _decryptActivated = false;
 
         private CypherModel _model;
@@ -31,7 +32,10 @@ namespace StreamCypher
             _model = new CypherModel();
             textBoxSourceFile.Text = sourcePath;
             textBoxDestinationFolder.Text = destinationPath;
-            textBoxEncryptedFilename.Text = @"1";
+            textBoxEncryptedFilename.Text = @"1.rar";
+
+            textBoxKey.Text = Encoding.Default.GetString(_model.Key);
+            textBoxNonce.Text = Encoding.Default.GetString(_model.Nonce);
         }
 
         private void configureMode()
@@ -49,12 +53,14 @@ namespace StreamCypher
         {
             progressBar.Value = 0;
             actionButton.Enabled = false;
-            
-            var stats = await _model.Encrypt(progress => { progressBar.Value = progress; });
+
+            Action<int> reporter = progress => { progressBar.Value = progress; };
+            var stats = _decryptActivated ? await _model.Decrypt(reporter) : await _model.Encrypt(reporter);
 
             actionButton.Enabled = true;
-            var seconds = stats.durationMilliseconds / 1000;
-            UIEx.ShowNotice("Encryption Complete!", "Duration: " + seconds.ToString() + " seconds.");
+            var seconds = stats.duration / 1000;
+            var message = (_decryptActivated ? "Encryption" : "Decryption") + " Complete!";
+            UIEx.ShowNotice(message, "Duration: " + seconds.ToString() + " seconds.");
         }
 
         private void buttonSelectSourceFile_Click(object sender, EventArgs e)
@@ -104,6 +110,16 @@ namespace StreamCypher
         {
             _decryptActivated = radioButtonDecrypt.Checked;
             configureMode();
+        }
+
+        private void textBoxKey_TextChanged(object sender, EventArgs e)
+        {
+            _model.Key = Encoding.Default.GetBytes(textBoxKey.Text);
+        }
+
+        private void textBoxNonce_TextChanged(object sender, EventArgs e)
+        {
+            _model.Nonce = Encoding.Default.GetBytes(textBoxNonce.Text);
         }
     }
 }

@@ -6,63 +6,73 @@ using System.Text;
 using System.Threading.Tasks;
 using StreamCypher.Helper;
 using Sodium;
+using System.Security.Cryptography;
 
 namespace StreamCypher.Cypher
 {
     public static class CypherEngine
     {
-        public struct CypherStats
+
+        public struct Stats
         {
-            public string name;
-            public long durationMilliseconds;
-            public long chunkCount;
-            public long sourceSize;
-            public long resultSize;
+            public long duration;
         }
 
-        public static async Task<CypherStats> Encrypt(Stream sourceStream, Stream destinationStream, IProgress<int> progress)
+        public static async Task<Stats> Process(Stream source, int bufferSize, IProgress<int> progress, Func<byte[], Task> apply)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();
 
             int bytesRead = 0;
             long bytesTotalRead = 0;
-            long chunkCount = 0;
-            long bytesTotal = sourceStream.Length;
-            byte[] buffer = new byte[BUFFER_SIZE];
-
-            var nonce = SecretBox.GenerateNonce();
-            var key = SecretBox.GenerateKey();
+            long bytesTotal = source.Length;
+            byte[] buffer = new byte[bufferSize];
 
             do
             {
-                bytesRead = await sourceStream.ReadAsync(buffer, 0, BUFFER_SIZE).ConfigureAwait(false);
+                bytesRead = await source.ReadAsync(buffer, 0, bufferSize).ConfigureAwait(false);
                 if (bytesRead != 0)
                 {
-                    if (bytesRead < BUFFER_SIZE)
+                    if (bytesRead < bufferSize)
                     {
                         Console.WriteLine("Last chunk.");
                     }
                 }
-                var encrypted = SecretBox.Create(buffer, nonce, key);
-                await destinationStream.WriteAsync(encrypted, 0, encrypted.Length);
+                await apply(buffer).ConfigureAwait(false);
 
                 bytesTotalRead += bytesRead;
-                ++chunkCount;
 
                 progress.Report((int)(bytesTotalRead * 100 / bytesTotal));
             } while (bytesRead != 0);
 
             watch.Stop();
 
-            CypherStats stats = new CypherStats();
-            stats.name = "Encryption";
-            stats.durationMilliseconds = watch.ElapsedMilliseconds;
-            stats.sourceSize = sourceStream.Length;
-            stats.resultSize = destinationStream.Length;
-
+            Stats stats;
+            stats.duration = watch.ElapsedMilliseconds;
             return stats;
         }
 
-        public const int BUFFER_SIZE = 1000000;
+        public static async Task<Stats> Encrypt(byte[] key, byte[] nonce, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
+        {
+            Aes aes = Aes.Create();
+            aes.Key = key;
+            var transformer = aes.CreateEncryptor();
+            var cryptoStream = new CryptoStream(destination, transformer, CryptoStreamMode.Write);
+
+            return await Process(source, bufferSize, progress, async (buffer) => {
+                await cryptoStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+            });
+        }
+
+        public static async Task<Stats> Decrypt(byte[] key, byte[] nonce, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
+        {
+            Aes aes = Aes.Create();
+            aes.Key = key;
+            var transformer = aes.CreateDecryptor();
+            var cryptoStream = new CryptoStream(destination, transformer, CryptoStreamMode.Write);
+
+            return await Process(source, bufferSize, progress, async (buffer) => {
+                await cryptoStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+            });
+        }
     }
 }
