@@ -59,6 +59,7 @@
     <Compile Include="Cypher\AesCryptor.cs" />
     <Compile Include="Cypher\Cryptor.cs" />
     <Compile Include="Cypher\CypherEngine.cs" />
+    <Compile Include="Cypher\CypherFactory.cs" />
     <Compile Include="Cypher\CypherModel.cs" />
     <Compile Include="Helper\UIEx.cs" />
     <Compile Include="Main.cs">

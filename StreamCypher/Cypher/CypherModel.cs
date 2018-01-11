@@ -71,7 +71,8 @@ namespace StreamCypher.Cypher
                 using (var sourceStream = File.OpenRead(_sourceFilePath))
                 using (var destinationStream = File.OpenWrite(EncryptedFilePath))
                 {
-                    return await CypherEngine.Encrypt(_key, _nonce, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
+                    var cryptor = CypherFactory.GetCryptor(CypherAlgorithm.AES, destinationStream);
+                    return await CypherEngine.Encrypt(cryptor, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
                 }
             } catch(Exception exception)
             {
@@ -87,7 +88,8 @@ namespace StreamCypher.Cypher
                 using (var sourceStream = File.OpenRead(_sourceFilePath))
                 using (var destinationStream = File.OpenWrite(EncryptedFilePath))
                 {
-                    return await CypherEngine.Decrypt(_key, _nonce, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
+                    var cryptor = CypherFactory.GetCryptor(CypherAlgorithm.AES, destinationStream);
+                    return await CypherEngine.Decrypt(cryptor, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
                 }
             }
             catch (Exception exception)

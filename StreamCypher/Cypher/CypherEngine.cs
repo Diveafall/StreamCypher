@@ -51,27 +51,17 @@ namespace StreamCypher.Cypher
             return stats;
         }
 
-        public static async Task<Stats> Encrypt(byte[] key, byte[] nonce, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
+        public static async Task<Stats> Encrypt(Cryptor cryptor, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
         {
-            Aes aes = Aes.Create();
-            aes.Key = key;
-            var transformer = aes.CreateEncryptor();
-            var cryptoStream = new CryptoStream(destination, transformer, CryptoStreamMode.Write);
-
             return await Process(source, bufferSize, progress, async (buffer) => {
-                await cryptoStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                await cryptor.Encrypt(buffer, destination).ConfigureAwait(false);
             });
         }
 
-        public static async Task<Stats> Decrypt(byte[] key, byte[] nonce, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
+        public static async Task<Stats> Decrypt(Cryptor cryptor, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
         {
-            Aes aes = Aes.Create();
-            aes.Key = key;
-            var transformer = aes.CreateDecryptor();
-            var cryptoStream = new CryptoStream(destination, transformer, CryptoStreamMode.Write);
-
             return await Process(source, bufferSize, progress, async (buffer) => {
-                await cryptoStream.WriteAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
+                await cryptor.Decrypt(buffer, destination).ConfigureAwait(false);
             });
         }
     }

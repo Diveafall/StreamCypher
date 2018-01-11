@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 
 namespace StreamCypher.Cypher
 {
-    interface Cryptor
+    public interface Cryptor
     {
         Task Encrypt(byte[] chunk, Stream destination);
+
         Task Decrypt(byte[] chunk, Stream destination);
+
+        byte[] GetKey();
     }
 }

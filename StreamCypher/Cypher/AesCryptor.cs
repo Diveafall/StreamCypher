@@ -10,23 +10,27 @@ namespace StreamCypher.Cypher
 {
     public class AesCryptor : Cryptor
     {
-        public async Task Decrypt(byte[] chunk, Stream output)
+        public async Task Decrypt(byte[] chunk, Stream destination)
         {
-            throw new NotImplementedException();
+            await _decryptor.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
         }
 
         public async Task Encrypt(byte[] chunk, Stream destination)
         {
-            using (var cryptoStream = new CryptoStream(destination, _encryptor, CryptoStreamMode.Write))
-            {
-                await _destinationStream.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
-            }
+            await _encryptor.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
+        }
+
+        public byte[] GetKey()
+        {
+            return _aes.Key;
         }
 
         private Aes _aes;
-        private CryptoStream _cryptoStream;
-        private ICryptoTransform _encryptor;
+
         protected Stream _destinationStream;
+
+        CryptoStream _encryptor;
+        CryptoStream _decryptor;
 
         public AesCryptor(Stream destination)
         {
@@ -38,17 +42,8 @@ namespace StreamCypher.Cypher
             _aes.GenerateKey();
             _aes.GenerateIV();
 
-            _encryptor = _aes.CreateEncryptor(_aes.Key, _aes.IV);
-        }
-
-        public Stream Destination
-        {
-            get { return _destinationStream; }
-            set
-            {
-                _destinationStream = value;
-                _cryptoStream = new CryptoStream(_destinationStream, _encryptor, CryptoStreamMode.Write);
-            }
+            _encryptor = new CryptoStream(destination, _aes.CreateEncryptor(_aes.Key, _aes.IV), CryptoStreamMode.Write);
+            _encryptor = new CryptoStream(destination, _aes.CreateDecryptor(_aes.Key, _aes.IV), CryptoStreamMode.Write);
         }
     }
 }
