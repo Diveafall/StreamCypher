@@ -13,19 +13,19 @@ namespace StreamCypher.Cypher
 
     public class CypherFactory
     {
-        public static Cryptor GetCryptor(CypherAlgorithm algorithm, System.IO.Stream destination)
+        public static Cryptor GetCryptor(CypherAlgorithm algorithm)
         {
             switch (algorithm)
             {
                 case CypherAlgorithm.AES:
-                    return GetAesCryptor(destination);
+                    return GetAesCryptor();
                 default: throw new InvalidOperationException("Specified algorithm does not exist.");
             }
         }
 
-        public static AesCryptor GetAesCryptor(System.IO.Stream destination)
+        public static AesCryptor GetAesCryptor()
         {
-            return new AesCryptor(destination);
+            return new AesCryptor();
         }
     }
 }

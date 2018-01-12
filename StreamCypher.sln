@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamCypher", "StreamCypher\StreamCypher.csproj", "{993F07B0-C708-48EF-8E56-06B5234D75D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamCypherTests", "StreamCypherTests\StreamCypherTests.csproj", "{C5815BC5-5BAC-488F-833F-92216651F110}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{993F07B0-C708-48EF-8E56-06B5234D75D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{993F07B0-C708-48EF-8E56-06B5234D75D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{993F07B0-C708-48EF-8E56-06B5234D75D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C5815BC5-5BAC-488F-833F-92216651F110}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C5815BC5-5BAC-488F-833F-92216651F110}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C5815BC5-5BAC-488F-833F-92216651F110}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C5815BC5-5BAC-488F-833F-92216651F110}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

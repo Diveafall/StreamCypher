@@ -15,6 +15,7 @@ namespace StreamCypher.Cypher
 
         public struct Stats
         {
+            public string title;
             public long duration;
         }
 
@@ -47,21 +48,22 @@ namespace StreamCypher.Cypher
             watch.Stop();
 
             Stats stats;
+            stats.title = @"Results";
             stats.duration = watch.ElapsedMilliseconds;
             return stats;
         }
 
-        public static async Task<Stats> Encrypt(Cryptor cryptor, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
+        public static async Task<Stats> Encrypt(Cryptor cryptor, Stream source, int bufferSize, IProgress<int> progress)
         {
             return await Process(source, bufferSize, progress, async (buffer) => {
-                await cryptor.Encrypt(buffer, destination).ConfigureAwait(false);
+                await cryptor.Encrypt(buffer).ConfigureAwait(false);
             });
         }
 
-        public static async Task<Stats> Decrypt(Cryptor cryptor, Stream source, Stream destination, int bufferSize, IProgress<int> progress)
+        public static async Task<Stats> Decrypt(Cryptor cryptor, Stream source, int bufferSize, IProgress<int> progress)
         {
             return await Process(source, bufferSize, progress, async (buffer) => {
-                await cryptor.Decrypt(buffer, destination).ConfigureAwait(false);
+                await cryptor.Decrypt(buffer).ConfigureAwait(false);
             });
         }
     }

@@ -20,7 +20,7 @@ namespace StreamCypher.Cypher
         #region Fields
         private string _sourceFilePath;
         private byte[] _key = SecretBox.GenerateKey();
-        private byte[] _nonce = SecretBox.GenerateNonce();
+        private Cryptor _cryptor = CypherFactory.GetCryptor(CypherAlgorithm.AES);
         #endregion
 
         #region Properties
@@ -51,9 +51,7 @@ namespace StreamCypher.Cypher
 
         public string EncryptedFileName { get; set; }
 
-        public byte[] Key { get { return _key; } set { _key = value; } }
-
-        public byte[] Nonce { get { return _nonce; } set { _nonce = value; } }
+        public byte[] Key { get { return _cryptor.Key; } set { _key = value; } }
 
         public string EncryptedFilePath
         {
@@ -64,6 +62,7 @@ namespace StreamCypher.Cypher
         }
         #endregion
 
+        #region Public Methods
         public async Task<Stats> Encrypt(Action<int> reporter)
         {
             try
@@ -71,32 +70,33 @@ namespace StreamCypher.Cypher
                 using (var sourceStream = File.OpenRead(_sourceFilePath))
                 using (var destinationStream = File.OpenWrite(EncryptedFilePath))
                 {
-                    var cryptor = CypherFactory.GetCryptor(CypherAlgorithm.AES, destinationStream);
-                    return await CypherEngine.Encrypt(cryptor, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
+                    _cryptor.EncryptDestination = destinationStream;
+                    return await CypherEngine.Encrypt(_cryptor, sourceStream, BUFFER_SIZE, new Progress<int>(reporter));
                 }
             } catch(Exception exception)
             {
-                UIEx.ShowNotice("SHIT", exception.Message);
+                UIEx.ShowNotice("Exception", exception.Message);
             }
             return new Stats();
         }
 
         public async Task<Stats> Decrypt(Action<int> reporter)
         {
-            try
-            {
+            //try
+            //{
                 using (var sourceStream = File.OpenRead(_sourceFilePath))
                 using (var destinationStream = File.OpenWrite(EncryptedFilePath))
                 {
-                    var cryptor = CypherFactory.GetCryptor(CypherAlgorithm.AES, destinationStream);
-                    return await CypherEngine.Decrypt(cryptor, sourceStream, destinationStream, BUFFER_SIZE, new Progress<int>(reporter));
+                    _cryptor.DecryptDestination = destinationStream;
+                    return await CypherEngine.Decrypt(_cryptor, sourceStream, BUFFER_SIZE, new Progress<int>(reporter));
                 }
-            }
-            catch (Exception exception)
-            {
-                UIEx.ShowNotice("SHIT", exception.Message);
-            }
+            //}
+            //catch (Exception exception)
+            //{
+            //    UIEx.ShowNotice("Exception", exception.Message);
+            //}
             return new Stats();
         }
+        #endregion
     }
 }

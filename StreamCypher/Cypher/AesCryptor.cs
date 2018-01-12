@@ -10,29 +10,64 @@ namespace StreamCypher.Cypher
 {
     public class AesCryptor : Cryptor
     {
-        public async Task Decrypt(byte[] chunk, Stream destination)
+        #region Fields
+        private Aes _aes;
+
+        private Stream _encDestination;
+        private Stream _decDestination;
+
+        private CryptoStream _encryptor;
+        private CryptoStream _decryptor;
+        #endregion
+
+        #region Properties
+        public byte[] Key
+        {
+            get
+            {
+                return _aes.Key;
+            }
+            set
+            {
+                _aes.Key = value;
+            }
+        }
+
+        public Stream EncryptDestination
+        {
+            get { return _encDestination; }
+            set
+            {
+                _encDestination = value;
+                _encryptor = new CryptoStream(_encDestination, _aes.CreateEncryptor(_aes.Key, _aes.IV), CryptoStreamMode.Write);
+            }
+        }
+
+        public Stream DecryptDestination
+        {
+            get { return _decDestination; }
+            set
+            {
+                _encDestination = value;
+                _encryptor = new CryptoStream(_decDestination, _aes.CreateDecryptor(_aes.Key, _aes.IV), CryptoStreamMode.Write);
+            }
+        }
+        #endregion
+
+        #region Public Methods
+        public async Task Decrypt(byte[] chunk)
         {
             await _decryptor.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
         }
 
-        public async Task Encrypt(byte[] chunk, Stream destination)
+        public async Task Encrypt(byte[] chunk)
         {
             await _encryptor.WriteAsync(chunk, 0, chunk.Length).ConfigureAwait(false);
         }
+        #endregion
 
-        public byte[] GetKey()
-        {
-            return _aes.Key;
-        }
-
-        private Aes _aes;
-
-        protected Stream _destinationStream;
-
-        CryptoStream _encryptor;
-        CryptoStream _decryptor;
-
-        public AesCryptor(Stream destination)
+        #region Constructors
+        public AesCryptor()
         {
             _aes = Aes.Create();
 
@@ -41,9 +76,7 @@ namespace StreamCypher.Cypher
 
             _aes.GenerateKey();
             _aes.GenerateIV();
-
-            _encryptor = new CryptoStream(destination, _aes.CreateEncryptor(_aes.Key, _aes.IV), CryptoStreamMode.Write);
-            _encryptor = new CryptoStream(destination, _aes.CreateDecryptor(_aes.Key, _aes.IV), CryptoStreamMode.Write);
         }
+        #endregion
     }
 }

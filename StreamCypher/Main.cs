@@ -29,13 +29,14 @@ namespace StreamCypher
         public Main()
         {
             InitializeComponent();
+
             _model = new CypherModel();
+
             textBoxSourceFile.Text = sourcePath;
             textBoxDestinationFolder.Text = destinationPath;
             textBoxEncryptedFilename.Text = @"1.rar";
 
             textBoxKey.Text = Encoding.Default.GetString(_model.Key);
-            textBoxNonce.Text = Encoding.Default.GetString(_model.Nonce);
         }
 
         private void configureMode()
@@ -43,7 +44,8 @@ namespace StreamCypher
             if (_decryptActivated)
             {
                 actionButton.Text = "Decrypt";
-            } else
+            }
+            else
             {
                 actionButton.Text = "Encrypt";
             }
@@ -52,15 +54,17 @@ namespace StreamCypher
         private async void actionButton_Click(object sender, EventArgs e)
         {
             progressBar.Value = 0;
-            actionButton.Enabled = false;
+            //actionButton.Enabled = false;
+            
+            Action<int> reporter = progress => {
+                progressBar.Value = progress;
+            };
+            var stats = _decryptActivated ? await _model.Decrypt(reporter).ConfigureAwait(false) : await _model.Encrypt(reporter).ConfigureAwait(false);
 
-            Action<int> reporter = progress => { progressBar.Value = progress; };
-            var stats = _decryptActivated ? await _model.Decrypt(reporter) : await _model.Encrypt(reporter);
-
-            actionButton.Enabled = true;
             var seconds = stats.duration / 1000;
             var message = (_decryptActivated ? "Encryption" : "Decryption") + " Complete!";
             UIEx.ShowNotice(message, "Duration: " + seconds.ToString() + " seconds.");
+            //actionButton.Enabled = true;
         }
 
         private void buttonSelectSourceFile_Click(object sender, EventArgs e)
@@ -115,11 +119,6 @@ namespace StreamCypher
         private void textBoxKey_TextChanged(object sender, EventArgs e)
         {
             _model.Key = Encoding.Default.GetBytes(textBoxKey.Text);
-        }
-
-        private void textBoxNonce_TextChanged(object sender, EventArgs e)
-        {
-            _model.Nonce = Encoding.Default.GetBytes(textBoxNonce.Text);
         }
     }
 }

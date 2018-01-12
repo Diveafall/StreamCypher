@@ -9,10 +9,12 @@ namespace StreamCypher.Cypher
 {
     public interface Cryptor
     {
-        Task Encrypt(byte[] chunk, Stream destination);
+        Task Encrypt(byte[] chunk);
 
-        Task Decrypt(byte[] chunk, Stream destination);
+        Task Decrypt(byte[] chunk);
 
-        byte[] GetKey();
+        byte[] Key { get; set; }
+        Stream EncryptDestination { get; set; }
+        Stream DecryptDestination { get; set; }
     }
 }
